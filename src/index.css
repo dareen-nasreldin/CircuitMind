@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary:    #0a0f1e;
+  --bg-surface:    #111827;
+  --bg-elevated:   #1a2235;
+  --accent-cyan:   #00d4ff;
+  --accent-green:  #00ff88;
+  --accent-red:    #ff4466;
+  --accent-yellow: #ffaa00;
+  --text-primary:  #e2e8f0;
+  --text-muted:    #64748b;
+  --border:        #1e293b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Glow utilities used across animator + builder */
+@layer utilities {
+  .glow-cyan {
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
+  }
+  .glow-green {
+    filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6));
+  }
+  .glow-red {
+    filter: drop-shadow(0 0 8px rgba(255, 68, 102, 0.6));
+  }
+  .glow-yellow {
+    filter: drop-shadow(0 0 8px rgba(255, 170, 0, 0.6));
+  }
+
+  /* Wire draw animation for SVG paths */
+  .wire-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: wire-in 0.8s ease forwards;
+  }
+  .wire-erase {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+    animation: wire-out 0.8s ease forwards;
+  }
+
+  /* Marching current-flow animation */
+  .current-flow {
+    stroke-dasharray: 8 6;
+    animation: current-march 1s linear infinite;
+  }
+
+  /* Step card entrance */
+  .step-enter {
+    animation: step-slide-up 0.3s ease forwards;
+  }
+}
+
+@keyframes wire-in {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes wire-out {
+  to { stroke-dashoffset: -1000; }
+}
+
+@keyframes current-march {
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes step-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
