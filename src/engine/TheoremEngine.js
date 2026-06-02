@@ -279,6 +279,49 @@ export default class TheoremEngine {
     return tracer.getSequence();
   }
 
+  // ── Ohm's Law ─────────────────────────────────────────────────────────────
+  // Simple 3-step demo for a single-resistor circuit
+  ohmsLaw(graph) {
+    const tracer    = new StepTracer();
+    const sources   = [...graph.edges.values()].filter(e => e.type === 'voltage_source');
+    const resistors = [...graph.edges.values()].filter(e => e.type === 'resistor');
+    const V         = sources[0]?.value ?? 0;
+    const R         = resistors[0]?.value ?? 1;
+    const I         = round(V / R, 6);
+
+    tracer.record(
+      'Identify the Circuit',
+      null,
+      `V = ${V} V,  R = ${R} Ω`,
+      `The circuit has a ${V} V source and a ${R} Ω resistor. Use Ohm\'s Law to find the current.`,
+      graph.serialize(),
+      { highlight: [...graph.edges.keys()] }
+    );
+
+    tracer.record(
+      "Apply Ohm's Law",
+      'V = I × R   →   I = V / R',
+      null,
+      `Ohm\'s Law states V = IR. Since V and R are known, solve directly for I.`,
+      graph.serialize(),
+      { highlight: sources.map(e => e.id) }
+    );
+
+    const solved = graph.clone();
+    solver.solve(solved);
+
+    tracer.record(
+      'Calculate Current I',
+      'I = V / R',
+      `I = ${V} V ÷ ${R} Ω = ${I} A  (${round(I * 1000, 4)} mA)`,
+      `The current flowing through the circuit is ${I} A or ${round(I * 1000, 4)} mA.`,
+      solved.serialize(),
+      { highlight: [...solved.edges.keys()], showCurrentFlow: true }
+    );
+
+    return tracer.getSequence();
+  }
+
   // ── KCL — Kirchhoff's Current Law ─────────────────────────────────────────
   kcl(graph, nodeId) {
     const tracer = new StepTracer();

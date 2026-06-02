@@ -52,6 +52,14 @@ export function superpositionCircuit() {
   return g;
 }
 
+// Ohm's Law demo: 10 V + 1 kΩ → I = 10 mA
+export function ohmsLawCircuit() {
+  const g = new CircuitGraph();
+  g.addElement('vs1', 'voltage_source', 10,   'n1', 'gnd');
+  g.addElement('r1',  'resistor',       1000, 'n1', 'gnd');
+  return g;
+}
+
 // KVL demo: 10 V source, R1=1 kΩ, R2=2 kΩ, R3=3 kΩ all in series
 //   I = 10 / 6000 ≈ 1.667 mA
 //   V_R1 = 1.667 V, V_R2 = 3.333 V, V_R3 = 5 V
