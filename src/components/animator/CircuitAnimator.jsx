@@ -48,9 +48,9 @@ function TerminalMarkers({ A, B }) {
 }
 
 // Map element type → animated SVG component
-function renderElement(el, hints) {
+function renderElement(el, hints, globalFade = false) {
   const highlighted      = hints.highlight?.includes(el.id)        ?? false;
-  const faded            = hints.fadeOut?.includes(el.id)          ?? false;
+  const faded            = globalFade || (hints.fadeOut?.includes(el.id) ?? false);
   const transformToShort = hints.transformToShort?.includes(el.id) ?? false;
   const transformToOpen  = hints.transformToOpen?.includes(el.id)  ?? false;
 
@@ -58,7 +58,7 @@ function renderElement(el, hints) {
 
   switch (el.type) {
     case 'resistor':
-      return <AnimatedResistor {...common} highlighted={highlighted} faded={faded} />;
+      return <AnimatedResistor {...common} highlighted={highlighted} faded={faded} voltageDrop={hints.voltageDrops?.[el.id]} />;
     case 'voltage_source':
       return <AnimatedVoltageSource {...common} highlighted={highlighted} faded={faded} transformToShort={transformToShort} />;
     case 'current_source':
@@ -68,13 +68,65 @@ function renderElement(el, hints) {
   }
 }
 
+// Norton equivalent overlay — rendered when hints.drawEquivalent.type === 'norton'
+function NortonEquivalentOverlay({ iN, rN }) {
+  const sx = 130, rx = 380, ytop = 95, ybot = 275;
+  const iMa = Math.round(iN * 1000);
+  return (
+    <g className="step-enter">
+      <AnimatedCurrentSource id="equiv-in" x1={sx} y1={ytop} x2={sx} y2={ybot}
+        value={iMa} unit="mA" highlighted faded={false} transformToOpen={false} />
+      <line x1={sx} y1={ytop} x2={rx} y2={ytop} stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <AnimatedResistor id="equiv-rn" x1={rx} y1={ytop} x2={rx} y2={ybot}
+        value={rN} unit="Ω" highlighted faded={false} />
+      <line x1={sx} y1={ybot} x2={rx} y2={ybot} stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <circle cx={rx} cy={ytop} r={5} fill="none" stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <circle cx={rx} cy={ybot} r={5} fill="none" stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <text x={rx + 16} y={ytop} fill="var(--accent-cyan)" fontSize="11"
+        fontFamily="JetBrains Mono, monospace" dominantBaseline="middle">A</text>
+      <text x={rx + 16} y={ybot} fill="var(--accent-cyan)" fontSize="11"
+        fontFamily="JetBrains Mono, monospace" dominantBaseline="middle">B (GND)</text>
+      <line x1={sx} y1={ybot} x2={sx} y2={ybot+10} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-10} y1={ybot+10} x2={sx+10} y2={ybot+10} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-6}  y1={ybot+16} x2={sx+6}  y2={ybot+16} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-2}  y1={ybot+22} x2={sx+2}  y2={ybot+22} stroke="var(--text-muted)" strokeWidth="1.5" />
+    </g>
+  );
+}
+
+// Thevenin equivalent circuit overlay — rendered when hints.drawEquivalent.type === 'thevenin'
+function TheveninEquivalentOverlay({ vth, rth }) {
+  const sx = 130, rx = 380, ytop = 95, ybot = 275;
+  return (
+    <g className="step-enter">
+      <AnimatedVoltageSource id="equiv-vth" x1={sx} y1={ytop} x2={sx} y2={ybot}
+        value={vth} unit="V" highlighted faded={false} transformToShort={false} />
+      <line x1={sx} y1={ytop} x2={rx} y2={ytop} stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <AnimatedResistor id="equiv-rth" x1={rx} y1={ytop} x2={rx} y2={ybot}
+        value={rth} unit="Ω" highlighted faded={false} />
+      <line x1={sx} y1={ybot} x2={rx} y2={ybot} stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <circle cx={rx} cy={ytop} r={5} fill="none" stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <circle cx={rx} cy={ybot} r={5} fill="none" stroke="var(--accent-cyan)" strokeWidth="1.8" />
+      <text x={rx + 16} y={ytop} fill="var(--accent-cyan)" fontSize="11"
+        fontFamily="JetBrains Mono, monospace" dominantBaseline="middle">A (V_out)</text>
+      <text x={rx + 16} y={ybot} fill="var(--accent-cyan)" fontSize="11"
+        fontFamily="JetBrains Mono, monospace" dominantBaseline="middle">B (GND)</text>
+      <line x1={sx} y1={ybot} x2={sx} y2={ybot+10} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-10} y1={ybot+10} x2={sx+10} y2={ybot+10} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-6}  y1={ybot+16} x2={sx+6}  y2={ybot+16} stroke="var(--text-muted)" strokeWidth="1.5" />
+      <line x1={sx-2}  y1={ybot+22} x2={sx+2}  y2={ybot+22} stroke="var(--text-muted)" strokeWidth="1.5" />
+    </g>
+  );
+}
+
 export default function CircuitAnimator({ sequence, onBack }) {
   const { currentStep, totalSteps, isPlaying, speed, play, pause, next, prev, reset, jumpTo, setSpeed } =
     useAnimationSequence(sequence.steps, { stepDuration: 2500 });
 
-  const step   = sequence.steps[currentStep];
-  const hints  = step?.hints ?? {};
-  const layout = sequence.layout;
+  const step        = sequence.steps[currentStep];
+  const hints       = step?.hints ?? {};
+  const layout      = sequence.layout;
+  const showEquiv   = !!hints.drawEquivalent;
 
   // KCL node highlight
   const kclNodeHighlighted = layout.kclNode && hints.highlight?.includes(layout.kclNode);
@@ -120,6 +172,9 @@ export default function CircuitAnimator({ sequence, onBack }) {
                 <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
                   <polygon points="0 0, 8 3, 0 6" fill="var(--text-muted)" />
                 </marker>
+                <marker id="arrowhead-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="var(--accent-cyan)" />
+                </marker>
               </defs>
 
               {/* Wires */}
@@ -127,13 +182,39 @@ export default function CircuitAnimator({ sequence, onBack }) {
                 <AnimatedWire
                   key={w.id}
                   {...w}
-                  currentFlow={hints.showCurrentFlow ?? false}
-                  faded={hints.fadeOut?.includes(w.id) ?? false}
+                  currentFlow={!showEquiv && (hints.showCurrentFlow ?? false)}
+                  faded={showEquiv || (hints.fadeOut?.includes(w.id) ?? false)}
                 />
               ))}
 
               {/* Circuit elements */}
-              {layout.elements?.map(el => renderElement(el, hints))}
+              {layout.elements?.map(el => renderElement(el, hints, showEquiv))}
+
+              {/* Thevenin equivalent overlay */}
+              {showEquiv && hints.drawEquivalent.type === 'thevenin' && (
+                <TheveninEquivalentOverlay
+                  vth={hints.drawEquivalent.vth}
+                  rth={hints.drawEquivalent.rth}
+                />
+              )}
+
+              {/* Norton equivalent overlay */}
+              {showEquiv && hints.drawEquivalent.type === 'norton' && (
+                <NortonEquivalentOverlay
+                  iN={hints.drawEquivalent.in}
+                  rN={hints.drawEquivalent.rn}
+                />
+              )}
+
+              {/* Short-circuit wire across terminals (Norton I_sc step) */}
+              {hints.shortTerminals && layout.terminals && (
+                <line
+                  x1={layout.terminals.A.x - 4} y1={layout.terminals.A.y}
+                  x2={layout.terminals.B.x - 4} y2={layout.terminals.B.y}
+                  stroke="var(--accent-cyan)" strokeWidth="2.5"
+                  className="step-enter"
+                />
+              )}
 
               {/* Nodes */}
               {layout.nodes?.map(n => (
@@ -143,6 +224,7 @@ export default function CircuitAnimator({ sequence, onBack }) {
                   step={step}
                   terminal={n.terminal ?? false}
                   highlighted={hints.highlight?.includes(n.id) ?? false}
+                  showVoltage={hints.showVoltages ?? false}
                 />
               ))}
 
@@ -156,13 +238,13 @@ export default function CircuitAnimator({ sequence, onBack }) {
                 <TerminalMarkers A={layout.terminals.A} B={layout.terminals.B} />
               )}
 
-              {/* KVL loop arrow */}
+              {/* KVL / current loop arrow */}
               {layout.loopArrow && hints.showCurrentFlow && (
                 <LoopArrow
                   cx={layout.loopArrow.cx}
                   cy={layout.loopArrow.cy}
                   r={layout.loopArrow.r}
-                  label="I"
+                  label={hints.currentLabel ?? 'I'}
                 />
               )}
 
@@ -178,6 +260,69 @@ export default function CircuitAnimator({ sequence, onBack }) {
                   />
                 ) : null;
               })()}
+
+              {/* KCL branch-current directional arrows — shown when current flow is active */}
+              {layout.kclArrows && hints.showCurrentFlow && layout.kclArrows.map(arrow => {
+                const mx = (arrow.x1 + arrow.x2) / 2;
+                const my = (arrow.y1 + arrow.y2) / 2;
+                const label = hints.branchCurrentLabels?.[arrow.id];
+                return (
+                  <g key={arrow.id} className="step-enter">
+                    <line
+                      x1={arrow.x1} y1={arrow.y1} x2={arrow.x2} y2={arrow.y2}
+                      stroke="var(--accent-cyan)" strokeWidth="1.5"
+                      markerEnd="url(#arrowhead-cyan)"
+                    />
+                    {label && (
+                      <text
+                        x={arrow.horizontal ? mx : mx + 16}
+                        y={arrow.horizontal ? my - 6 : my}
+                        fill="var(--accent-cyan)"
+                        fontSize="10"
+                        fontFamily="JetBrains Mono, monospace"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        {label}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* Generic text annotations — shown when present in hints */}
+              {hints.textAnnotations?.map(a => (
+                <text
+                  key={a.id}
+                  x={a.x} y={a.y}
+                  fill={a.color ?? 'var(--accent-cyan)'}
+                  fontSize="11"
+                  fontFamily="JetBrains Mono, monospace"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="step-enter"
+                >
+                  {a.text}
+                </text>
+              ))}
+
+              {/* Superposition Step 4: per-node summation labels */}
+              {hints.sumAnnotations?.map(ann => {
+                const nd = layout.nodes?.find(n => n.id === ann.nodeId);
+                if (!nd) return null;
+                return (
+                  <text
+                    key={`sum-${ann.nodeId}`}
+                    x={nd.x + 10} y={nd.y + 28}
+                    fill="var(--accent-yellow)"
+                    fontSize="10"
+                    fontFamily="JetBrains Mono, monospace"
+                    className="step-enter"
+                  >
+                    {ann.text}
+                  </text>
+                );
+              })}
             </svg>
           </div>
 

@@ -1,0 +1,17 @@
+Claude Code Prompt:
+"In src/components/animator/sequences/01-ohmsLaw.js, Step 1 text has a typo ('10000 resistor' instead of '1000 ohm resistor') and Step 2 text says 'solve directly for L' instead of 'solve directly for I'. Fix these text descriptions. The sequence uses manual steps and a layout object. Only change what is needed, do not refactor other steps."
+
+---QUOTE---
+
+Claude Code Prompt:
+"In src/components/animator/sequences/03-parallel.js, Step 4 calculation string has a typo rendering as '0.06 - 0.04 - 0.020A'. Fix the string so it correctly renders as '0.06 - 0.04 - 0.02 = 0 A'. The sequence uses manual steps and a layout object. Only change what is needed, do not refactor other steps."
+
+---QUOTE---
+
+Claude Code Prompt:
+"In src/components/animator/sequences/08-thevenin.js, Step 1's text says 'circuit with load R_L connected', but the diagram does not actually render R_L, making Step 1 and Step 2 visually identical. Update the layout or sequence so that Step 1 renders the load resistor R_L (100 ohms) between terminals A and B, which is then removed in Step 2. The sequence uses manual steps and a layout object. Only change what is needed, do not refactor other steps."
+
+---QUOTE---
+
+Claude Code Prompt:
+"In src/components/animator/sequences/09-norton.js, Step 1's text introduces 'load R_L at terminals A-B', but the diagram does not render R_L, making Step 1 and Step 2 visually identical. Fix it so that Step 1 properly renders the load resistor R_L (100 ohms) between terminals A and B before it is removed in Step 2. The sequence uses manual steps and a layout object. Only change what is needed, do not refactor other steps."

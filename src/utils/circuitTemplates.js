@@ -60,12 +60,12 @@ export function ohmsLawCircuit() {
   return g;
 }
 
-// KVL demo: 10 V source, R1=1 kΩ, R2=2 kΩ, R3=3 kΩ all in series
-//   I = 10 / 6000 ≈ 1.667 mA
-//   V_R1 = 1.667 V, V_R2 = 3.333 V, V_R3 = 5 V
+// KVL demo: 18 V source, R1=1 kΩ, R2=2 kΩ, R3=3 kΩ all in series
+//   I = 18 / 6000 = 3 mA
+//   V_R1 = 3 V, V_R2 = 6 V, V_R3 = 9 V
 export function kvlCircuit() {
   const g = new CircuitGraph();
-  g.addElement('vs1', 'voltage_source', 10,   'n1', 'gnd');
+  g.addElement('vs1', 'voltage_source', 18,   'n1', 'gnd');
   g.addElement('r1',  'resistor',       1000, 'n1', 'n2');
   g.addElement('r2',  'resistor',       2000, 'n2', 'n3');
   g.addElement('r3',  'resistor',       3000, 'n3', 'gnd');

@@ -124,3 +124,25 @@ body {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.5; }
 }
+
+/* ── KaTeX overrides ─────────────────────────────────────────────────────── */
+/* Formula block: cyan */
+.formula-math .katex,
+.formula-math .katex-html {
+  color: var(--accent-cyan);
+}
+/* Calculation block: green */
+.calc-math .katex,
+.calc-math .katex-html {
+  color: var(--accent-green);
+}
+/* Prevent KaTeX from overflowing narrow panels */
+.formula-math .katex-display,
+.calc-math .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* math-inline span inherits its parent color if no katex colour is set */
+.math-inline {
+  display: inline;
+}

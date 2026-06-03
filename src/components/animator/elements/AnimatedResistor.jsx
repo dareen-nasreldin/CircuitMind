@@ -32,7 +32,7 @@ function zigzagPoints(x1, y1, x2, y2) {
   return pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 }
 
-export default function AnimatedResistor({ x1, y1, x2, y2, value, unit, id, highlighted = false, faded = false }) {
+export default function AnimatedResistor({ x1, y1, x2, y2, value, unit, id, highlighted = false, faded = false, voltageDrop }) {
   const points = useMemo(() => zigzagPoints(x1, y1, x2, y2), [x1, y1, x2, y2]);
 
   const isHoriz = Math.abs(x2 - x1) >= Math.abs(y2 - y1);
@@ -66,8 +66,23 @@ export default function AnimatedResistor({ x1, y1, x2, y2, value, unit, id, high
           textAnchor="middle"
           dominantBaseline="middle"
           className="transition-colors duration-300"
+          style={{ fontVariantNumeric: 'normal' }}
         >
-          {value} {unit}
+          {`${value} ${unit ?? ''}`}
+        </text>
+      )}
+      {voltageDrop !== undefined && voltageDrop !== null && (
+        <text
+          x={lx} y={isHoriz ? ly + 13 : ly + 14}
+          fill="var(--accent-yellow)"
+          fontSize="10"
+          fontFamily="JetBrains Mono, monospace"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="step-enter"
+          style={{ fontVariantNumeric: 'normal' }}
+        >
+          {voltageDrop} V
         </text>
       )}
     </g>

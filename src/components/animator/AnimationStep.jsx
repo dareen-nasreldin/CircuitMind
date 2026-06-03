@@ -1,3 +1,5 @@
+import MathText from '../MathText.jsx';
+
 // Right-panel step card — title, formula, calculation, explanation
 export default function AnimationStep({ step, stepIndex, totalSteps }) {
   if (!step) return null;
@@ -24,8 +26,10 @@ export default function AnimationStep({ step, stepIndex, totalSteps }) {
           key={step.id + '-formula'}
           style={{ animationDelay: '80ms' }}
         >
-          <p className="font-mono text-xs text-text-muted uppercase tracking-wider mb-1">Formula</p>
-          <p className="font-mono text-sm text-accent-cyan leading-relaxed">{step.formula}</p>
+          <p className="font-mono text-xs text-text-muted uppercase tracking-wider mb-2">Formula</p>
+          <div className="formula-math text-sm leading-relaxed">
+            <MathText tex={step.formula} />
+          </div>
         </div>
       )}
 
@@ -36,8 +40,10 @@ export default function AnimationStep({ step, stepIndex, totalSteps }) {
           key={step.id + '-calc'}
           style={{ animationDelay: '160ms' }}
         >
-          <p className="font-mono text-xs text-text-muted uppercase tracking-wider mb-1">Calculation</p>
-          <p className="font-mono text-sm text-accent-green leading-relaxed whitespace-pre-wrap">{step.calculation}</p>
+          <p className="font-mono text-xs text-text-muted uppercase tracking-wider mb-2">Calculation</p>
+          <div className="calc-math text-sm leading-relaxed whitespace-pre-wrap">
+            <MathText tex={step.calculation} />
+          </div>
         </div>
       )}
 

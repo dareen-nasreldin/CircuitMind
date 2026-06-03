@@ -1,9 +1,9 @@
-// Node dot — responds to highlight hints and shows voltage when available
+// Node dot — responds to highlight hints and shows voltage when showVoltage prop is true
 export default function AnimatedNode({
-  id, x, y, label = null, terminal = false, step = null, highlighted = false,
+  id, x, y, label = null, terminal = false, step = null, highlighted = false, showVoltage = false,
 }) {
   const voltage    = step?.graphState?.nodes?.[id]?.voltage;
-  const showVoltage = voltage !== null && voltage !== undefined;
+  const showVoltage_ = showVoltage && voltage !== null && voltage !== undefined;
 
   return (
     <g>
@@ -40,8 +40,8 @@ export default function AnimatedNode({
         </text>
       )}
 
-      {/* Voltage annotation (shown after MNA is solved) */}
-      {showVoltage && (
+      {/* Voltage annotation (shown only when showVoltage hint is active) */}
+      {showVoltage_ && (
         <text
           x={x + 8} y={y + 18}
           fill="var(--accent-yellow)"

@@ -48,6 +48,7 @@ export default function AnimatedVoltageSource({
             fill="var(--accent-yellow)"
             fontSize="11" fontFamily="JetBrains Mono, monospace"
             textAnchor="middle" dominantBaseline="middle"
+            style={{ fontVariantNumeric: 'normal' }}
           >
             {value} {unit}
           </text>

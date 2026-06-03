@@ -81,8 +81,9 @@ export default class TheoremEngine {
       `Look into the open terminals with all sources deactivated. The equivalent resistance is ${rthStr}.`,
       g2.serialize(),
       {
-        highlight: [...g2.edges.keys()].filter(id => g2.edges.get(id).type === 'resistor'),
-        bracket:   { label: `R_th = ${rthStr}`, nodes: [termA, termB] },
+        highlight:        [...g2.edges.keys()].filter(id => g2.edges.get(id).type === 'resistor'),
+        bracket:          { label: `R_th = ${rthStr}`, nodes: [termA, termB] },
+        transformToShort: sourceIds,
       }
     );
 
@@ -235,45 +236,48 @@ export default class TheoremEngine {
     const totalR = resistors.reduce((s, e) => s + (e.value ?? 0), 0);
     const I      = totalR !== 0 ? round(totalV / totalR, 6) : 0;
 
-    const kvlTerms = resistors.map(e => `I × ${e.value} Ω`).join(' + ');
-    const formula  = `ΣV = 0  →  ${sources.map(e => `${e.value} V`).join(' + ')} = ${kvlTerms}`;
+    const kvlTerms = resistors.map(e => `I * ${e.value} Ω`).join(' + ');
+    const formula  = `ΣV = 0  ->  ${sources.map(e => `${e.value} V`).join(' + ')} = ${kvlTerms}`;
 
     tracer.record(
       'Apply KVL Around the Loop',
-      'ΣV_sources = ΣI·R  (sum of rises = sum of drops)',
+      'ΣV_sources = ΣI * R  (sum of rises = sum of drops)',
       formula,
       'Sum all voltage rises (sources) and set equal to sum of voltage drops (resistors).',
       graph.serialize(),
-      { highlight: sources.map(e => e.id) }
+      { highlight: sources.map(e => e.id), showCurrentFlow: true }
     );
 
     tracer.record(
       'Solve for Loop Current I',
       `I = ΣV / ΣR`,
-      `I = ${totalV} V / ${totalR} Ω = ${I} A (${round(I * 1000, 4)} mA)`,
+      `I = ${totalV} V / ${totalR} Ω = ${I} A`,
       `The loop current is ${I} A.`,
       graph.serialize(),
-      {}
+      { showCurrentFlow: true }
     );
 
     // Solve full MNA and record per-element voltage drops
     const solved = graph.clone();
     solver.solve(solved);
 
+    const voltageDrops = {};
     const drops = resistors.map(r => {
       const el = solved.edges.get(r.id);
       const va = solved.nodes.get(el.nodeA)?.voltage ?? 0;
       const vb = solved.nodes.get(el.nodeB)?.voltage ?? 0;
-      return `V_${r.id} = ${round(Math.abs(va - vb), 4)} V`;
+      const drop = round(Math.abs(va - vb), 4);
+      voltageDrops[r.id] = drop;
+      return `V_${r.id} = ${drop} V`;
     }).join(',  ');
 
     tracer.record(
       'Calculate Voltage Drops',
-      'V = I × R  for each element',
+      'V = IR  for each element',
       drops,
       'Use V = IR to find the voltage drop across each resistor.',
       solved.serialize(),
-      { highlight: resistors.map(r => r.id), showCurrentFlow: true }
+      { highlight: resistors.map(r => r.id), showCurrentFlow: true, voltageDrops }
     );
 
     return tracer.getSequence();
@@ -304,7 +308,7 @@ export default class TheoremEngine {
       null,
       `Ohm\'s Law states V = IR. Since V and R are known, solve directly for I.`,
       graph.serialize(),
-      { highlight: sources.map(e => e.id) }
+      { highlight: [...graph.edges.keys()], showCurrentFlow: true }
     );
 
     const solved = graph.clone();
@@ -313,10 +317,10 @@ export default class TheoremEngine {
     tracer.record(
       'Calculate Current I',
       'I = V / R',
-      `I = ${V} V ÷ ${R} Ω = ${I} A  (${round(I * 1000, 4)} mA)`,
+      `I = ${V} V / ${R} Ω = ${I} A  (${round(I * 1000, 4)} mA)`,
       `The current flowing through the circuit is ${I} A or ${round(I * 1000, 4)} mA.`,
       solved.serialize(),
-      { highlight: [...solved.edges.keys()], showCurrentFlow: true }
+      { highlight: [...solved.edges.keys()], showCurrentFlow: true, currentLabel: `${round(I * 1000, 4)} mA` }
     );
 
     return tracer.getSequence();
